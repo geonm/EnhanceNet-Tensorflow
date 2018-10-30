@@ -2,7 +2,7 @@
 
 Tensorflow implementation of EnhanceNet for a magnification ratio of 4.
 
-**We slightly changed the procedure for training Enet to the followings**
+**We slightly changed the procedure for training Enet as followings**
 + Discriminator has been changed like DCGAN.
 + We only used ```pool5_4 and conv3_1 features``` from VGG-19. See losses.py
 + So, we changed hyper-parameters for loss combination.

@@ -47,4 +47,12 @@ python3 train_SR.py --model=enhancenet --upsample=nearest \
 --vgg_path=/where/is/your/vgg19/vgg_19.ckpt
 ```
 
+### How to test?
+
+```
+python3 test_SR.py --model_path=/your/pretrained/model/folder \
+--image_path=/your/image/folder \
+--save_path=/generated_image/will/be/saved/here \
+--run_gpu=0
+```
 

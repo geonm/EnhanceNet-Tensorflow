@@ -44,7 +44,7 @@ python3 train_SR.py --model=enhancenet --upsample=nearest \
 --losses='mse' \
 --learning_rate=0.0001 \
 --save_path=/your/models/will/be/saved \
---image_path=/where/is/your/COCODB/train2017/*.jpg \
+--image_path=/where/is/your/COCODB/train2017/*.jpg
 
 # ENet-PAT
 python3 train_SR.py --model=enhancenet --upsample=nearest \

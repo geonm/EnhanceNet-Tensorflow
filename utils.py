@@ -66,3 +66,11 @@ def get_last_ckpt_path(folder_path):
     ckpt_path = latest_meta_path.replace('.meta', '')
 
     return ckpt_path
+
+def get_image_paths(image_folder):
+    possible_image_type = ['jpg', 'png', 'JPEG', 'jpeg']
+
+    image_list = [image_path for image_paths in [glob.glob(os.path.join(image_folder, '*.%s' % ext)) for ext in possible_image_type] for image_path in image_paths]
+
+    return image_list
+

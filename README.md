@@ -37,6 +37,16 @@ tar xvzf vgg_19_2016_08_28.tar.gz
 
 3. Do train!
 ```
+# ENet-E
+python3 train_SR.py --model=enhancenet --upsample=nearest \
+--recon_type=residual --SR_scale=4 --run_gpu=0 \
+--batch_size=32 --num_readers=4 --input_size=32 \
+--losses='mse' \
+--learning_rate=0.0001 \
+--save_path=/your/models/will/be/saved \
+--image_path=/where/is/your/COCODB/train2017/*.jpg \
+
+# ENet-PAT
 python3 train_SR.py --model=enhancenet --upsample=nearest \
 --recon_type=residual --SR_scale=4 --run_gpu=0 \
 --batch_size=32 --num_readers=4 --input_size=32 \

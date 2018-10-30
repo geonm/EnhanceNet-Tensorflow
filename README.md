@@ -2,7 +2,7 @@
 
 Tensorflow implementation of EnhanceNet for a magnification ratio of 4.
 
-We slightly changed the procedure for training Enet to the followings
+**We slightly changed the procedure for training Enet as followings**
 + Discriminator has been changed like DCGAN.
 + We only used ```pool5_4 and conv3_1 features``` from VGG-19. See losses.py
 + So, we changed hyper-parameters for loss combination.
@@ -44,7 +44,7 @@ python3 train_SR.py --model=enhancenet --upsample=nearest \
 --losses='mse' \
 --learning_rate=0.0001 \
 --save_path=/your/models/will/be/saved \
---image_path=/where/is/your/COCODB/train2017/*.jpg \
+--image_path=/where/is/your/COCODB/train2017/*.jpg
 
 # ENet-PAT
 python3 train_SR.py --model=enhancenet --upsample=nearest \
@@ -66,3 +66,15 @@ python3 test_SR.py --model_path=/your/pretrained/model/folder \
 --run_gpu=0
 ```
 
+### Reference
+```
+@inproceedings{enhancenet,
+  title={{EnhanceNet: Single Image Super-Resolution through Automated Texture Synthesis}},
+  author={Sajjadi, Mehdi S. M. and Sch{\"o}lkopf, Bernhard and Hirsch, Michael},
+  booktitle={Computer Vision (ICCV), 2017 IEEE International Conference on},
+  pages={4501--4510},
+  year={2017},
+  organization={IEEE},
+  url={https://arxiv.org/abs/1612.07919/}
+}
+```

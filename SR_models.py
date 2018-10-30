@@ -87,43 +87,11 @@ class model_builder:
 
             return input_features + features
     
-    #########################################################################
-    #########################################################################
-    #########################################################################
-    def conv_var(kernel_size, in_channels, out_channels, init_method, scope):
-        shape = [kernel_size[0], kernel_size[1], in_channels, out_channels]
-        if init_method == 'msra':
-            return tf.get_variable(name=scope, shape=shape, initializer=tf.contrib.layers.variance_scaling_initializer())
-        elif init_method == 'xavier':
-            return tf.get_variable(name=scope, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
-
-    def clique_block(self, features, out_ch, num_layer, is_training, scope):
-        # looping will happen here!
-        # channels_per_layer = out_ch.
-        # input_layer = features
-        # we don't need a 'bottle_net mode'
-        channels = out_ch
-        node_0_channels = features.get_shape().as_list()[-1]
-        param_dict = {}
-        kernel_size = [3, 3]
-        block_name = scope
-
-        for layer_id in range(1, layer_num):
-            add_id = 1
-            while layer_id+add_id <= layer_num:
-                filters = conv_var(kernel_size=kernel_size, in_channels=channels, out_channels=channels, init_method='msra', scope=block_name+'_'+str(layer_id)+'_'+str(layer_id + add_id))
-                param_dict[str(layer_id)+'_'+str(layer_id+add_id)] = filters
-
-                # TODO: implement clique_block!!!
-    #########################################################################
-    #########################################################################
-    #########################################################################
     def phaseShift(self, features, scale, shape_1, shape_2):
         X = tf.reshape(features, shape_1)
         X = tf.transpose(X, [0, 1, 3, 2, 4])
 
         return tf.reshape(X, shape_2)
-
     
     def pixelShuffler(self, features, scale=2):
         size = tf.shape(features)
@@ -151,18 +119,6 @@ class model_builder:
         else: #pixelShuffler
             return self.pixelShuffler(features, scale=2)
 
-    def downsample(self, features, rate=0.5):
-        h = tf.cast(rate * tf.shape(features)[1], tf.int32)
-        w = tf.cast(rate * tf.shape(features)[2], tf.int32)
-        
-        if FLAGS.upsample == 'nearest':
-            return tf.image.resize_nearest_neighbor(features, size=[h, w])
-        elif FLAGS.upsample == 'bilinear':
-            return tf.image.resize_bilinear(features, size=[h, w])
-        else: #pixelShuffler
-            # not yet optimized for downsampling
-            return self.pixelShuffler(features, scale=rate)
-    
     def recon_image(self, inputs, outputs):
         '''
         LR to HR -> inputs: LR, outputs: HR
@@ -210,75 +166,7 @@ class model_builder:
 
         return outputs
     
-    def inv_enhancenet(self, inputs, is_training):
-        with slim.arg_scope([slim.conv2d],
-                            activation_fn=tf.nn.relu,
-                            normalizer_fn=None):
-            features = slim.conv2d(inputs, 64, 3, scope='conv1')
-
-            for idx in range(10):
-                if FLAGS.use_bn:
-                    features = self.res_block_bn(features, out_ch=64, is_training=is_training, scope='res_block_bn_%d' % (idx))
-                else:
-                    features = self.res_block(features, out_ch=64, scope='res_block_%d' % (idx))
-
-            features = self.downsample(features)
-            features = slim.conv2d(features, 64, 3, scope='conv2')
-
-            features = self.downsample(features)
-            features = slim.conv2d(features, 64, 3, scope='conv3')
-            features = slim.conv2d(features, 64, 3, scope='conv4')
-            outputs = slim.conv2d(features, 3, 3, activation_fn=None, scope='conv5')
-
-        return outputs
-    
     ########## Let's enhance our method!
-
-    def res_group(self, features, n_layers, scope):
-        
-        input_features = features
-        
-        with tf.variable_scope(scope):
-            for idx in range(n_layers):
-                features = self.res_block(features, out_ch=64, scope='res_block_%d' % (idx))
-            
-            features = slim.conv2d(features, 64, 3, scope='conv_out')
-
-        return features + input_features # short skip connection
-
-    #def dilated_block(self, features,
-
-    def customnet(self, inputs, is_training):
-        # inspired by RCAN
-        
-        FLAGS.with_se = True
-
-        with slim.arg_scope([slim.conv2d],
-                            activation_fn=tf.nn.relu,
-                            normalizer_fn=None):
-            features = slim.conv2d(inputs, 64, 3, scope='conv1')
-    
-            input_features = features
-
-            for idx in range(10):
-                features = self.res_group(features, n_layers=5, scope='res_group_%d' % (idx))
-
-            features = slim.conv2d(features, 64, 3, scope='conv_out')
-            features = features + input_features # long skip connection
-            
-            features = self.upsample(features)
-            features = slim.conv2d(features, 64, 3, scope='conv2')
-            
-            features = self.upsample(features)
-            features = slim.conv2d(features, 64, 3, scope='conv3')
-            features = slim.conv2d(features, 64, 3, scope='conv4')
-
-            outputs = slim.conv2d(features, 3, 3, activation_fn=None, scope='conv5')
-
-        return outputs
-
-
-    ########
 
     def generator(self, inputs, is_training, model='enhancenet'):
         '''
@@ -290,31 +178,11 @@ class model_builder:
         with tf.variable_scope('generator'):
             if model == 'enhancenet':
                 outputs = self.enhancenet(inputs, is_training)
-            elif model == 'customnet':
-                outputs = self.customnet(inputs, is_training)
 
         outputs, resized_inputs = self.recon_image(inputs, outputs)
 
         return outputs, resized_inputs
     
-    def inv_generator(self, inputs, is_training, model='enhancenet'):
-        '''
-        HR to LR
-        inputs are generated images!!!
-        '''
-        
-        inputs = self.preprocess(inputs)
-
-        with tf.variable_scope('inv_generator'):
-            if model == 'enhancenet':
-                outputs = self.inv_enhancenet(inputs, is_training)
-
-        outputs, resized_inputs = self.recon_image(inputs, outputs)
-
-        return outputs, resized_inputs
-
-
-
 ### test part
 
 if __name__ == '__main__':

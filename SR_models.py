@@ -5,8 +5,6 @@ from tensorflow.contrib import slim
 tf.app.flags.DEFINE_string('upsample', 'nearest', 'nearest, bilinear, or pixelShuffler')
 tf.app.flags.DEFINE_string('model', 'enhancenet', 'for now, only enhancenet supported')
 tf.app.flags.DEFINE_string('recon_type', 'residual', 'residual or direct')
-tf.app.flags.DEFINE_integer('reduction_ratio', 16, 'for se_block')
-tf.app.flags.DEFINE_boolean('with_se', False, 'whether se_block used or not')
 tf.app.flags.DEFINE_boolean('use_bn', False, 'for res_block_bn')
 
 FLAGS = tf.app.flags.FLAGS
@@ -41,31 +39,11 @@ class model_builder:
 
             return pos + neg
     
-    def se_block(self, features, out_ch, ratio):
-        '''
-        ratio = 16
-        '''
-        depth = out_ch
-        with tf.variable_scope('se_block'):
-            w = tf.reduce_mean(features, [1, 2], keepdims=True)
-            w = slim.conv2d(w, int(depth/ratio), [1, 1], stride=1,
-                            normalizer_fn=None,
-                            activation_fn=tf.nn.relu,
-                            scope='se1')
-            w = slim.conv2d(w, depth, [1, 1], stride=1,
-                            normalizer_fn=None,
-                            activation_fn=tf.sigmoid,
-                            scope='se2')
-            output = features * w
-            return output
-
     def res_block(self, features, out_ch, scope):
         input_features = features
         with tf.variable_scope(scope):
             features = slim.conv2d(input_features, out_ch, 3, activation_fn=tf.nn.relu, normalizer_fn=None)
             features = slim.conv2d(features, out_ch, 3, activation_fn=None, normalizer_fn=None)
-            if FLAGS.with_se:
-                features = self.se_block(features, out_ch, FLAGS.reduction_ratio)
             
             return input_features + features
  
@@ -82,8 +60,6 @@ class model_builder:
         with tf.variable_scope(scope):
             features = slim.conv2d(input_features, out_ch, 3, activation_fn=tf.nn.relu, normalizer_fn=slim.batch_norm, normalizer_params=batch_norm_params)
             features = slim.conv2d(features, out_ch, 3, activation_fn=None, normalizer_fn=slim.batch_norm, normalizer_params=batch_norm_params)
-            if FLAGS.with_se:
-                features = self.se_block(features, out_ch, FLAGS.reduction_ratio)
 
             return input_features + features
     

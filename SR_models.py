@@ -10,7 +10,7 @@ tf.app.flags.DEFINE_boolean('use_bn', False, 'for res_block_bn')
 FLAGS = tf.app.flags.FLAGS
 
 class model_builder:
-    def __ini__(self):
+    def __init__(self):
         return
 
     def preprocess(self, images):
